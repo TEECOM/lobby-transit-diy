@@ -21,25 +21,25 @@ import (
 
 // Strucures; the actual information is separated from updates
 type line struct {
-	Name  string
-	ID    string
-	Times []int
-	Color string
+	Name  string `json:"name"`
+	ID    string `json:"id"`
+	Times []int  `json:"times"`
+	Color string `json:"color"`
 }
 
 type coordinates struct {
-	Lat float64
-	Lon float64
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
 }
 
 type station struct {
-	Name  string
-	ID    string
-	Coord coordinates
+	Name  string      `json:"name"`
+	ID    string      `json:"id"`
+	Coord coordinates `json:"coord"`
 
-	Directions [2]string
+	Directions [2]string `json:"directions"`
 
-	Lines [2]map[string]*line
+	Lines [2]map[string]*line `json:"lines"`
 }
 
 type system struct {
