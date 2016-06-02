@@ -141,6 +141,7 @@ func handleStopInfo(w http.ResponseWriter, r *http.Request) {
 	if stop == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "400 Bad Request: Invalid stop id (%s)\n", stopID[0])
+		return
 	}
 
 	// Send the response
