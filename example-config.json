@@ -1,27 +1,27 @@
 {
-    "Name": "TEECOM Shuttle Service",
-    "Tagline": "San Francisco Bay Area",
-    "TimeMax": 45,
+    "name": "TEECOM Shuttle Service",
+    "tagline": "San Francisco Bay Area",
+    "timeMax": 45,
     
-    "Stops": 
+    "stops": 
     [
         {
-            "Name": "TEECOM Office",
-            "ID": "tee",
-            "Coord": 
+            "name": "TEECOM Office",
+            "id": "tee",
+            "coord": 
             {
-                "Lat": 37.8042967,
-                "Lon": -122.2766555
+                "lat": 37.8042967,
+                "lon": -122.2766555
             },
-            "Directions": ["Northbound", "Southbound"],
-            "Lines":
+            "directions": ["Northbound", "Southbound"],
+            "lines":
             [
                 {
                    "sh":  
                    {
-                       "Name": "Shuttle",
-                       "ID": "sh",
-                       "Color": "#ff0000"
+                       "name": "Shuttle",
+                       "id": "sh",
+                       "color": "#ff0000"
                    }
                 },
                 null
