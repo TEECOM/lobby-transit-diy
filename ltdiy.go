@@ -132,7 +132,7 @@ func handleStopInfo(w http.ResponseWriter, r *http.Request) {
 	stopID := r.URL.Query()["id"]
 	if stopID == nil || len(stopID) != 1 {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request: Missing stop ID")
+		fmt.Fprintln(w, "400 Bad Request: Missing stop ID")
 		return
 	}
 
@@ -140,7 +140,7 @@ func handleStopInfo(w http.ResponseWriter, r *http.Request) {
 	stop := mainSystem.stopMap[stopID[0]]
 	if stop == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request: Invalid stop id (%s)", stopID[0])
+		fmt.Fprintf(w, "400 Bad Request: Invalid stop id (%s)\n", stopID[0])
 	}
 
 	// Send the response
@@ -168,7 +168,7 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 	// Try to apply the updates
 	if err := processUpdates(&new); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request: %s", err.Error())
+		fmt.Fprintf(w, "400 Bad Request: %s\n", err.Error())
 		return
 	}
 
@@ -204,7 +204,7 @@ func serve(w http.ResponseWriter, f string, code int) {
 	text, err := ioutil.ReadFile(staticDirectory + "/" + f)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "500 Internal Server Error\n")
+		fmt.Fprintln(w, "500 Internal Server Error")
 		return
 	}
 
