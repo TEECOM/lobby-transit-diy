@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sync"
 )
 
 // Strucures; the actual information is separated from updates
@@ -45,6 +46,7 @@ type system struct {
 	Stops   []station
 	TimeMax int
 	stopMap map[string]*station
+	rwLock  *sync.RWMutex
 }
 
 // Update structures (externally generated)
@@ -91,13 +93,16 @@ var mainSystem system = system{
 	TimeMax: 45,
 
 	stopMap: make(map[string]*station),
+	rwLock:  &sync.RWMutex{},
 }
 
 // Where static files will be found
 const staticDirectory string = "static"
 
 func prepareSystem() {
-	// Cache system IDs for future lookup
+	// Cache system IDs for future lookup.
+	// No need to do any locking as the server hasn't
+	// started up yet.
 	for i := 0; i < len(mainSystem.Stops); i++ {
 		stop := &mainSystem.Stops[i]
 		mainSystem.stopMap[stop.ID] = stop
@@ -121,6 +126,10 @@ func main() {
 
 // JSON encode all of the information
 func handleInfo(w http.ResponseWriter, r *http.Request) {
+	// Obtain a read lock for the system
+	mainSystem.rwLock.RLock()
+	defer mainSystem.rwLock.RUnlock()
+
 	if err := json.NewEncoder(w).Encode(mainSystem); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, "Internal Server Error")
@@ -135,6 +144,10 @@ func handleStopInfo(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "400 Bad Request: Missing stop ID")
 		return
 	}
+
+	// Obtain a read lock for the system
+	mainSystem.rwLock.RLock()
+	defer mainSystem.rwLock.RUnlock()
 
 	// Try to find the correct stop
 	stop := mainSystem.stopMap[stopID[0]]
@@ -172,11 +185,13 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "400 Bad Request: %s\n", err.Error())
 		return
 	}
-
-	log.Println(new)
 }
 
 func processUpdates(u *update) error {
+	// Obtain a writer lock
+	mainSystem.rwLock.Lock()
+	defer mainSystem.rwLock.Unlock()
+
 	for _, su := range u.Stops {
 		stop := mainSystem.stopMap[su.StationID]
 		if stop == nil {
@@ -194,7 +209,6 @@ func processUpdates(u *update) error {
 			}
 
 			ln.Times = lu.Times
-			log.Println(ln.Times)
 		}
 	}
 
