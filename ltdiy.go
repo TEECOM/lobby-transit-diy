@@ -43,12 +43,12 @@ type station struct {
 }
 
 type system struct {
-	Name    string
-	Tagline string
-	Stops   []station
-	TimeMax int
-	stopMap map[string]*station
-	rwLock  *sync.RWMutex
+	sync.RWMutex // Protects everything below
+	Name         string
+	Tagline      string
+	Stops        []station
+	TimeMax      int
+	stopMap      map[string]*station
 }
 
 // Update structures (externally generated)
@@ -71,7 +71,6 @@ type update struct {
 // in by the supplied configuration file
 var mainSystem system = system{
 	stopMap: make(map[string]*station),
-	rwLock:  &sync.RWMutex{},
 }
 
 // Where static files will be found
@@ -104,8 +103,8 @@ func main() {
 // JSON encode all of the information
 func handleInfo(w http.ResponseWriter, r *http.Request) {
 	// Obtain a read lock for the system
-	mainSystem.rwLock.RLock()
-	defer mainSystem.rwLock.RUnlock()
+	mainSystem.RLock()
+	defer mainSystem.RUnlock()
 
 	if err := json.NewEncoder(w).Encode(mainSystem); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -123,8 +122,8 @@ func handleStopInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Obtain a read lock for the system
-	mainSystem.rwLock.RLock()
-	defer mainSystem.rwLock.RUnlock()
+	mainSystem.RLock()
+	defer mainSystem.RUnlock()
 
 	// Try to find the correct stop
 	stop := mainSystem.stopMap[stopID[0]]
@@ -166,8 +165,8 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 
 func processUpdates(u *update) error {
 	// Obtain a writer lock
-	mainSystem.rwLock.Lock()
-	defer mainSystem.rwLock.Unlock()
+	mainSystem.Lock()
+	defer mainSystem.Unlock()
 
 	for _, su := range u.Stops {
 		stop := mainSystem.stopMap[su.StationID]
