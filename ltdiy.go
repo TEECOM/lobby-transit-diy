@@ -114,13 +114,17 @@ func main() {
 	http.HandleFunc("/stop", handleStopInfo)
 
 	// Run server on port 8080
-	http.ListenAndServe(":8080", nil)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // JSON encode all of the information
 func handleInfo(w http.ResponseWriter, r *http.Request) {
-	js := json.NewEncoder(w)
-	js.Encode(mainSystem)
+	if err := json.NewEncoder(w).Encode(mainSystem); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Internal Server Error")
+	}
 }
 
 func handleStopInfo(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +132,7 @@ func handleStopInfo(w http.ResponseWriter, r *http.Request) {
 	stopID := r.URL.Query()["id"]
 	if stopID == nil || len(stopID) != 1 {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request: Missing stop ID")
+		fmt.Fprintln(w, "400 Bad Request: Missing stop ID")
 		return
 	}
 
@@ -136,12 +140,14 @@ func handleStopInfo(w http.ResponseWriter, r *http.Request) {
 	stop := mainSystem.stopMap[stopID[0]]
 	if stop == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request: Invalid stop id (%s)", stopID[0])
+		fmt.Fprintf(w, "400 Bad Request: Invalid stop id (%s)\n", stopID[0])
 	}
 
 	// Send the response
-	js := json.NewEncoder(w)
-	js.Encode(stop)
+	if err := json.NewEncoder(w).Encode(stop); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Internal Server Error")
+	}
 }
 
 // Handle update request
@@ -153,19 +159,16 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode the JSON
-	js := json.NewDecoder(r.Body)
 	var new update
-	err := js.Decode(&new)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&new); err != nil {
 		serve(w, "badupdate.html", http.StatusBadRequest)
 		return
 	}
 
 	// Try to apply the updates
-	err = processUpdates(&new)
-	if err != nil {
+	if err := processUpdates(&new); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request: %s", err.Error())
+		fmt.Fprintf(w, "400 Bad Request: %s\n", err.Error())
 		return
 	}
 
@@ -199,10 +202,9 @@ func processUpdates(u *update) error {
 
 func serve(w http.ResponseWriter, f string, code int) {
 	text, err := ioutil.ReadFile(staticDirectory + "/" + f)
-
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "500 Internal Server Error\n")
+		fmt.Fprintln(w, "500 Internal Server Error")
 		return
 	}
 
