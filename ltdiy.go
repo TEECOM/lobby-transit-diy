@@ -43,11 +43,11 @@ type station struct {
 }
 
 type system struct {
-	sync.RWMutex // Protects everything below
-	Name         string
-	Tagline      string
-	Stops        []station
-	TimeMax      int
+	sync.RWMutex           // Protects everything below
+	Name         string    `json:"name"`
+	Tagline      string    `json:"tagline"`
+	Stops        []station `json:"stops"`
+	TimeMax      int       `json:"timeMax"`
 	stopMap      map[string]*station
 }
 
