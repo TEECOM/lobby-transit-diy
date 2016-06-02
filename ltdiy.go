@@ -21,50 +21,50 @@ import (
 
 // Strucures; the actual information is separated from updates
 type line struct {
-	Name  string
-	ID    string
-	Times []int
-	Color string
+	Name  string `json:"name"`
+	ID    string `json:"id"`
+	Times []int  `json:"times"`
+	Color string `json:"color"`
 }
 
 type coordinates struct {
-	Lat float64
-	Lon float64
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
 }
 
 type station struct {
-	Name  string
-	ID    string
-	Coord coordinates
+	Name  string      `json:"name"`
+	ID    string      `json:"id"`
+	Coord coordinates `json:"coord"`
 
-	Directions [2]string
+	Directions [2]string `json:"directions"`
 
-	Lines [2]map[string]*line
+	Lines [2]map[string]*line `json:"lines"`
 }
 
 type system struct {
-	sync.RWMutex // Protects everything below
-	Name         string
-	Tagline      string
-	Stops        []station
-	TimeMax      int
+	sync.RWMutex           // Protects everything below
+	Name         string    `json:"name"`
+	Tagline      string    `json:"tagline"`
+	Stops        []station `json:"stops"`
+	TimeMax      int       `json:"timeMax"`
 	stopMap      map[string]*station
 }
 
 // Update structures (externally generated)
 type lineUpdate struct {
-	LineID string
-	Index  int
-	Times  []int
+	LineID string `json:"lineID"`
+	Index  int    `json:"index"`
+	Times  []int  `json:"times"`
 }
 
 type stationUpdate struct {
-	StationID string
-	Lines     []lineUpdate
+	StationID string       `json:"stationID"`
+	Lines     []lineUpdate `json:"lines"`
 }
 
 type update struct {
-	Stops []stationUpdate
+	Stops []stationUpdate `json:"stops"`
 }
 
 // This is the main system information; at runtime this is filled
