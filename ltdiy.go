@@ -53,18 +53,18 @@ type system struct {
 
 // Update structures (externally generated)
 type lineUpdate struct {
-	LineID string
-	Index  int
-	Times  []int
+	LineID string `json:"lineID"`
+	Index  int    `json:"index"`
+	Times  []int  `json:"times"`
 }
 
 type stationUpdate struct {
-	StationID string
-	Lines     []lineUpdate
+	StationID string       `json:"stationID"`
+	Lines     []lineUpdate `json:"lines"`
 }
 
 type update struct {
-	Stops []stationUpdate
+	Stops []stationUpdate `json:"stops"`
 }
 
 // This is the main system information; at runtime this is filled
