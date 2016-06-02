@@ -10,10 +10,12 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 )
 
@@ -65,33 +67,9 @@ type update struct {
 	Stops []stationUpdate
 }
 
-// This is the main system information; fill this as appropriate
+// This is the main system information; at runtime this is filled
+// in by the supplied configuration file
 var mainSystem system = system{
-	Name:    "TEECOM Shuttle Service",
-	Tagline: "San Francisco Bay Area",
-	Stops: []station{
-		station{
-			Name: "TEECOM",
-			ID:   "tee",
-			Coord: coordinates{
-				Lat: 10.5,
-				Lon: 10.5,
-			},
-			Directions: [2]string{"Northbound", "Southbound"},
-			Lines: [2]map[string]*line{
-				map[string]*line{
-					"sh": &line{
-						Name:  "Shuttle",
-						ID:    "sh",
-						Color: "#ff0000",
-					},
-				},
-			},
-		},
-	},
-
-	TimeMax: 45,
-
 	stopMap: make(map[string]*station),
 	rwLock:  &sync.RWMutex{},
 }
@@ -99,19 +77,18 @@ var mainSystem system = system{
 // Where static files will be found
 const staticDirectory string = "static"
 
-func prepareSystem() {
-	// Cache system IDs for future lookup.
-	// No need to do any locking as the server hasn't
-	// started up yet.
-	for i := 0; i < len(mainSystem.Stops); i++ {
-		stop := &mainSystem.Stops[i]
-		mainSystem.stopMap[stop.ID] = stop
-	}
-}
-
 func main() {
 	log.Println("Starting server")
-	prepareSystem()
+
+	// Setup command line flags
+	configPtr := flag.String("config", "", "Configuration file")
+	flag.Parse()
+	if *configPtr == "" {
+		log.Fatal("No configuration provided. Use '-config=<config filename>'")
+	}
+
+	// Build the server configuration
+	readConfig(*configPtr)
 
 	// Setup routing
 	http.HandleFunc("/info", handleInfo)
@@ -225,4 +202,25 @@ func serve(w http.ResponseWriter, f string, code int) {
 
 	w.WriteHeader(code)
 	fmt.Fprintf(w, "%s", text)
+}
+
+func readConfig(filename string) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Unable to open configuration file (%s)", filename)
+	}
+
+	log.Printf("Using configuration file (%s)", filename)
+
+	if jserr := json.NewDecoder(f).Decode(&mainSystem); jserr != nil {
+		log.Fatal("Malformed json configuration")
+	}
+
+	// Cache system IDs for future lookup.
+	// No need to do any locking as the server hasn't
+	// started up yet.
+	for i := 0; i < len(mainSystem.Stops); i++ {
+		stop := &mainSystem.Stops[i]
+		mainSystem.stopMap[stop.ID] = stop
+	}
 }
